@@ -1,9 +1,10 @@
+
 const config = {
     // Personal Information
     name: "Hamza Mikdad",
     title: "Cybersecurity Professional",
     email: "hamza999@gmail.com",
-    phone: "+212 634111483",
+    phone: "+212 XXX-XXX-XXX",
     
     // Social Links
     social: {
@@ -116,16 +117,16 @@ const config = {
             title: "Unitrack - Student Attendance System",
             description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
             icon: "📊",
-            link: "documents/Unitrack.pdf", // PDF download
-            isPDF: true, // Flag to indicate this is a PDF
+            link: "documents/Unitrack.pdf",
+            isPDF: true,
             tags: ["Python", "OpenCV", "Flask", "MySQL"]
         },
         {
             title: "Blockchain Technology",
-            description: "Développement d'un smart contract de vote décentralisé en Solidity, garantissant un vote unique par participant et la transparence des résultats, déployé sur une blockchain locale via Remix IDE.",
+            description: "Développement d'un smart contract de vote décentralisé en Solidity, garantissant un vote unique par participant et la transparence des résultats.",
             icon: "⛓️",
-            link: "documents/Blockchain_Project.pdf", // PDF download
-            isPDF: true, // Flag to indicate this is a PDF
+            link: "documents/Blockchain_Project.pdf",
+            isPDF: true,
             tags: ["Blockchain", "Solidity", "Remix IDE", "Python"]
         }
     ],

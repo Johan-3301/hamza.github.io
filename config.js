@@ -1,4 +1,3 @@
-
 const config = {
     // Personal Information
     name: "Hamza Mikdad",
@@ -111,15 +110,16 @@ const config = {
         }
     ],
     
-    // Projects - Updated with PDF downloads
+    // Projects - Updated with correct file names
     projects: [
         {
             title: "Unitrack - Student Attendance System",
             description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
             icon: "📊",
-            link: "documents/Unitrack.pdf",
-            isPDF: true,
-            tags: ["Python", "OpenCV", "Flask", "MySQL"]
+            link: "documents/Unitrack_Project.zip.001",
+            isPDF: false,
+            tags: ["Python", "OpenCV", "Flask", "MySQL"],
+            note: "This is a split ZIP file. Download both parts to extract."
         },
         {
             title: "Blockchain Technology",

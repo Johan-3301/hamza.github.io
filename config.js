@@ -110,16 +110,40 @@ const config = {
         }
     ],
     
-    // Projects - Updated with correct file names
+    // Projects - Google Drive for large PDF
     projects: [
         {
             title: "Unitrack - Student Attendance System",
             description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
             icon: "📊",
-            link: "documents/Unitrack_Project.zip.001",
-            isPDF: false,
+            // REPLACE THIS WITH YOUR GOOGLE DRIVE FILE ID
+            link: "https://drive.google.com/uc?export=download&id=YOUR_GOOGLE_DRIVE_FILE_ID",
+            isPDF: true,
+            isExternal: true, // Flag for external links
             tags: ["Python", "OpenCV", "Flask", "MySQL"],
-            note: "This is a split ZIP file. Download both parts to extract."
+            additionalDownloads: [
+                {
+                    name: "Source Code (Part 1)",
+                    link: "documents/Unitrack_Project.zip.001",
+                    type: "zip",
+                    icon: "📦",
+                    description: "ZIP Part 1 of 2"
+                },
+                {
+                    name: "Source Code (Part 2)", 
+                    link: "documents/Unitrack_Project.zip.002",
+                    type: "zip",
+                    icon: "📦",
+                    description: "ZIP Part 2 of 2"
+                },
+                {
+                    name: "View PDF Online",
+                    link: "https://drive.google.com/file/d/YOUR_GOOGLE_DRIVE_FILE_ID/view",
+                    type: "external",
+                    icon: "👁️",
+                    description: "View in browser (no download)"
+                }
+            ]
         },
         {
             title: "Blockchain Technology",
@@ -127,7 +151,9 @@ const config = {
             icon: "⛓️",
             link: "documents/Blockchain_Project.pdf",
             isPDF: true,
-            tags: ["Blockchain", "Solidity", "Remix IDE", "Python"]
+            isExternal: false,
+            tags: ["Blockchain", "Solidity", "Remix IDE", "Python"],
+            additionalDownloads: []
         }
     ],
     

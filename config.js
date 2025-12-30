@@ -116,7 +116,7 @@ const config = {
             title: "Unitrack - Student Attendance System",
             description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
             icon: "📊",
-            // REPLACE THIS WITH YOUR GOOGLE DRIVE FILE ID
+            // Direct download link to Google Drive
             link: "https://drive.google.com/uc?export=download&id=1rf6d-7vMmES0rungyrVExFBbflOXsy9x",
             isPDF: true,
             isExternal: true, // Flag for external links
@@ -199,4 +199,3 @@ const config = {
 
 // Make config available globally
 window.config = config;
-

@@ -53,9 +53,10 @@ function initPortfolio() {
         </div>
     `).join('');
     
+    // Populate projects with PDF download support
     const projectsGrid = document.getElementById('projectsGrid');
-    projectsGrid.innerHTML = config.projects.map(project => `
-        <div class="project-card" onclick="window.open('${project.link}', '_blank')">
+    projectsGrid.innerHTML = config.projects.map((project, index) => `
+        <div class="project-card" data-project-index="${index}">
             <div class="project-image">${project.icon}</div>
             <div class="project-content">
                 <h3>${project.title}</h3>
@@ -63,9 +64,30 @@ function initPortfolio() {
                 <div class="tech-stack">
                     ${project.tags.map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
                 </div>
+                ${project.isPDF ? '<div class="download-badge">📄 Download PDF</div>' : ''}
             </div>
         </div>
     `).join('');
+    
+    // Add click handlers for project cards
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const index = this.getAttribute('data-project-index');
+            const project = config.projects[index];
+            if (project.isPDF) {
+                // Download PDF
+                const link = document.createElement('a');
+                link.href = project.link;
+                link.download = project.link.split('/').pop();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                // Open link in new tab
+                window.open(project.link, '_blank');
+            }
+        });
+    });
     
     const timeline = document.getElementById('timeline');
     timeline.innerHTML = config.experience.map(exp => `

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamza Mikdad - Cybersecurity Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Cursor Elements -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    <div class="scroll-progress"></div>
+    
+    <!-- Background Elements -->
+    <div class="animated-bg"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="floating-words" id="floatingWords"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="logo">Hamza</div>
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#home" class="nav-link">Home</a></li>
+            <li><a href="#about" class="nav-link">About</a></li>
+            <li><a href="#skills" class="nav-link">Skills</a></li>
+            <li><a href="#certifications" class="nav-link">Certifications</a></li>
+            <li><a href="#projects" class="nav-link">Projects</a></li>
+            <li><a href="#experience" class="nav-link">Experience</a></li>
+            <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Hamza</h1>
+            <div class="typing-text" id="typingText"></div>
+            <p class="quote">"In a world of ones and zeros, security is the only constant."</p>
+            <div class="cta-buttons">
+                <a href="#projects" class="btn btn-primary">View My Work</a>
+                <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <h2 class="section-title">My Skills</h2>
+        <div class="skills-filter">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="pentesting">Penetration Testing</button>
+            <button class="filter-btn" data-filter="defense">Cyber Defense</button>
+            <button class="filter-btn" data-filter="tools">Security Tools</button>
+        </div>
+        <div class="skills-grid" id="skillsGrid">
+            <!-- Skill cards will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-content">
+            <div class="about-image">
+                <img src="assets/profile.jpg" alt="Your Name" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=774&q=80'">
+            </div>
+            <div class="about-text">
+                <h3>Hello! I'm Hamza</h3>
+                <p>Cybersecurity student with passion for ethical hacking and network security...</p>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="3">0</div>
+                        <div class="stat-label">Certifications</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="30">0</div>
+                        <div class="stat-label">CTF Challenges</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="2">0</div>
+                        <div class="stat-label">Years Experience</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Certifications Section -->
+    <section id="certifications">
+        <h2 class="section-title">Certifications</h2>
+        <div class="certifications-grid" id="certificationsGrid">
+            <!-- Certifications will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects">
+        <h2 class="section-title">Security Projects</h2>
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience">
+        <h2 class="section-title">My Journey</h2>
+        <div class="timeline" id="timeline">
+            <!-- Timeline items will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <h2 class="section-title">Get In Touch</h2>
+        <div class="contact-content">
+            <p class="contact-description">
+                Interested in discussing cybersecurity or collaboration opportunities? 
+                Feel free to reach out!
+            </p>
+            <div class="contact-info">
+                <div class="contact-item" id="emailContact">
+                    <span class="contact-icon"><i class="fas fa-envelope"></i></span>
+                    <span>hamza999@gmail.com</span>
+                </div>
+                <div class="contact-item" id="linkedinContact">
+                    <span class="contact-icon"><i class="fab fa-linkedin"></i></span>
+                    <span>LinkedIn Profile</span>
+                </div>
+                <div class="contact-item" id="githubContact">
+                    <span class="contact-icon"><i class="fab fa-github"></i></span>
+                    <span>GitHub Profile</span>
+                </div>
+                <div class="contact-item" id="tryhackmeContact">
+                    <span class="contact-icon"><i class="fas fa-shield-alt"></i></span>
+                    <span>TryHackMe Profile</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Top Button -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Your Name. All rights reserved.</p>
+        <p class="footer-quote">Stay secure. Think like an attacker, defend like a guardian.</p>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

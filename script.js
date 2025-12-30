@@ -1,6 +1,8 @@
 // Helper function to extract file extension
 function getFileExtension(filename) {
-    return filename.split('.').pop().toLowerCase();
+    if (!filename) return '';
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
 }
 
 // Helper function to get file type label
@@ -9,13 +11,128 @@ function getFileTypeLabel(filename) {
     const fileTypes = {
         'pdf': 'PDF Document',
         'zip': 'ZIP Archive',
-        'zip.001': 'Split ZIP Part 1',
-        'zip.002': 'Split ZIP Part 2',
+        '001': 'ZIP Part 1',
+        '002': 'ZIP Part 2',
         'doc': 'Word Document',
         'docx': 'Word Document',
         'txt': 'Text File'
     };
-    return fileTypes[ext] || ext.toUpperCase() + ' File';
+    return fileTypes[ext] || (ext ? ext.toUpperCase() + ' File' : 'File');
+}
+
+// Check if link is external
+function isExternalLink(url) {
+    return url.startsWith('http://') || 
+           url.startsWith('https://') || 
+           url.includes('google.com') || 
+           url.includes('drive.google.com');
+}
+
+// Show download notification
+function showDownloadNotification(title, fileType, isExternal = false) {
+    const notification = document.createElement('div');
+    const icon = isExternal ? '🔗' : '✅';
+    const bgColor = isExternal ? 'rgba(59, 130, 246, 0.95)' : 'rgba(16, 185, 129, 0.95)';
+    
+    notification.className = 'download-notification';
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px; font-size: 1.2em;">${icon}</span>
+            <div>
+                <strong>${isExternal ? 'Opening external link' : 'Download started'}</strong>
+                <div style="font-size: 0.9em;">${title} (${fileType})</div>
+                ${isExternal ? '<div style="font-size: 0.8em; margin-top: 3px; opacity: 0.9;">Will open in new tab</div>' : ''}
+            </div>
+        </div>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${bgColor};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, isExternal ? 4000 : 3000);
+}
+
+// Show error notification
+function showErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px;">⚠️</span>
+            <div>
+                <strong>Download Error</strong>
+                <div style="font-size: 0.9em;">${message}</div>
+            </div>
+        </div>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
+// Download file function (handles both local and external)
+function downloadFile(filePath, fileName, fileType, isExternal = false) {
+    console.log('Download initiated:', { filePath, fileName, fileType, isExternal });
+    
+    if (isExternal) {
+        // For external links, open in new tab
+        window.open(filePath, '_blank', 'noopener,noreferrer');
+        showDownloadNotification(fileName, getFileTypeLabel(filePath), true);
+        return;
+    }
+    
+    // Local file handling
+    fetch(filePath, { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                const link = document.createElement('a');
+                link.href = filePath;
+                link.download = fileName || filePath.split('/').pop();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showDownloadNotification(fileName || 'File', getFileTypeLabel(filePath), false);
+            } else {
+                console.error('File not found:', filePath);
+                showErrorNotification(`File not found: ${filePath.split('/').pop()}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error accessing file:', error);
+            showErrorNotification('Error accessing file. Please try again.');
+        });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -30,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initBackToTop();
     initContactLinks();
     initCurrentYear();
-    checkPDFFiles(); // Debug function to check file availability
 });
 
 function initPortfolio() {
@@ -74,7 +190,7 @@ function initPortfolio() {
         </div>
     `).join('');
     
-    // Populate projects with correct download support
+    // Populate projects with proper external/internal indicators
     const projectsGrid = document.getElementById('projectsGrid');
     projectsGrid.innerHTML = config.projects.map((project, index) => `
         <div class="project-card" data-project-index="${index}">
@@ -85,65 +201,47 @@ function initPortfolio() {
                 <div class="tech-stack">
                     ${project.tags.map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
                 </div>
+                
+                <!-- Main Download Button -->
                 <div class="download-section">
-                    <div class="download-badge">
-                        ${project.isPDF ? '📄 PDF' : '📦 Download'} 
-                        <small style="font-size: 0.8em; margin-left: 5px;">
-                            ${getFileTypeLabel(project.link)}
-                        </small>
-                    </div>
-                    ${project.note ? `<small style="display: block; margin-top: 5px; color: #ff6b6b; font-size: 0.8em;">${project.note}</small>` : ''}
+                    <button class="download-btn main-download ${project.isExternal ? 'external-link' : ''}" 
+                            data-project-index="${index}" 
+                            data-file-type="main"
+                            data-is-external="${project.isExternal || false}">
+                        ${project.isPDF ? '📄 ' : '📦 '}
+                        ${project.isExternal ? 'Open PDF (Google Drive)' : 'Download PDF'}
+                        <small>${getFileTypeLabel(project.link)} ${project.isExternal ? '↗' : ''}</small>
+                    </button>
+                    
+                    ${project.isExternal ? 
+                        `<div class="google-drive-note">
+                            <small>📢 Large file hosted on Google Drive</small>
+                        </div>` 
+                        : ''
+                    }
+                    
+                    <!-- Additional Download Buttons -->
+                    ${project.additionalDownloads && project.additionalDownloads.length > 0 ? `
+                        <div class="additional-downloads">
+                            <h4 style="margin: 15px 0 10px 0; font-size: 0.9em; color: var(--text-gray);">
+                                Additional Files:
+                            </h4>
+                            ${project.additionalDownloads.map((download, dIndex) => `
+                                <button class="download-btn secondary-download ${isExternalLink(download.link) ? 'external-link' : ''}" 
+                                        data-project-index="${index}" 
+                                        data-download-index="${dIndex}"
+                                        data-is-external="${isExternalLink(download.link)}">
+                                    ${download.icon} ${download.name}
+                                    <small>${download.description || getFileTypeLabel(download.link)} 
+                                    ${isExternalLink(download.link) ? '↗' : ''}</small>
+                                </button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         </div>
     `).join('');
-    
-    // Add click handlers for project cards with improved download
-    document.querySelectorAll('.project-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const index = this.getAttribute('data-project-index');
-            const project = config.projects[index];
-            
-            console.log('Download clicked:', {
-                title: project.title,
-                link: project.link,
-                isPDF: project.isPDF,
-                fileType: getFileTypeLabel(project.link)
-            });
-            
-            // Check if file exists before attempting download
-            fetch(project.link, { method: 'HEAD' })
-                .then(response => {
-                    if (response.ok) {
-                        // File exists - proceed with download
-                        const link = document.createElement('a');
-                        link.href = project.link;
-                        
-                        // Set appropriate download filename
-                        if (project.isPDF) {
-                            link.download = project.title.replace(/\s+/g, '_') + '.pdf';
-                        } else {
-                            link.download = project.link.split('/').pop();
-                        }
-                        
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // Show download confirmation
-                        showDownloadNotification(project.title, getFileTypeLabel(project.link));
-                    } else {
-                        // File not found
-                        console.error('File not found:', project.link);
-                        showErrorNotification(`File not found: ${project.link.split('/').pop()}`);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error accessing file:', error);
-                    showErrorNotification('Error accessing file. Please try again.');
-                });
-        });
-    });
     
     const timeline = document.getElementById('timeline');
     timeline.innerHTML = config.experience.map(exp => `
@@ -155,93 +253,64 @@ function initPortfolio() {
             </div>
         </div>
     `).join('');
+    
+    // Initialize download button handlers
+    initDownloadButtons();
 }
 
-function showDownloadNotification(title, fileType) {
-    const notification = document.createElement('div');
-    notification.className = 'download-notification';
-    notification.innerHTML = `
-        <div style="display: flex; align-items: center;">
-            <span style="margin-right: 10px;">✅</span>
-            <div>
-                <strong>Download started</strong>
-                <div style="font-size: 0.9em;">${title} (${fileType})</div>
-            </div>
-        </div>
-    `;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(16, 185, 129, 0.95);
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        z-index: 9999;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease-out;
-    `;
+// Initialize download button handlers
+function initDownloadButtons() {
+    // Main download buttons
+    document.querySelectorAll('.main-download').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = this.getAttribute('data-project-index');
+            const isExternal = this.getAttribute('data-is-external') === 'true';
+            const project = config.projects[index];
+            
+            // Visual feedback for external links
+            if (isExternal) {
+                this.classList.add('loading');
+                this.innerHTML = '⏳ Opening Google Drive...';
+                setTimeout(() => {
+                    this.classList.remove('loading');
+                    this.innerHTML = `
+                        ${project.isPDF ? '📄 ' : '📦 '}
+                        ${project.isExternal ? 'Open PDF (Google Drive)' : 'Download PDF'}
+                        <small>${getFileTypeLabel(project.link)} ↗</small>
+                    `;
+                }, 1500);
+            }
+            
+            downloadFile(project.link, project.title, 'main', isExternal);
+        });
+    });
     
-    document.body.appendChild(notification);
+    // Secondary download buttons
+    document.querySelectorAll('.secondary-download').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const projectIndex = this.getAttribute('data-project-index');
+            const downloadIndex = this.getAttribute('data-download-index');
+            const isExternal = this.getAttribute('data-is-external') === 'true';
+            const project = config.projects[projectIndex];
+            const download = project.additionalDownloads[downloadIndex];
+            
+            downloadFile(download.link, download.name, 'additional', isExternal);
+        });
+    });
     
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-function showErrorNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'error-notification';
-    notification.innerHTML = `
-        <div style="display: flex; align-items: center;">
-            <span style="margin-right: 10px;">⚠️</span>
-            <div>
-                <strong>Download Error</strong>
-                <div style="font-size: 0.9em;">${message}</div>
-            </div>
-        </div>
-    `;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(239, 68, 68, 0.95);
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        z-index: 9999;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease-out;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => notification.remove(), 300);
-    }, 4000);
-}
-
-// Debug function to check file availability
-function checkPDFFiles() {
-    console.log('Checking file availability:');
-    config.projects.forEach((project, index) => {
-        fetch(project.link, { method: 'HEAD' })
-            .then(response => {
-                console.log(`File ${index + 1}: ${project.title}`);
-                console.log(`  Path: ${project.link}`);
-                console.log(`  Status: ${response.ok ? '✅ Found' : '❌ Not Found'}`);
-                console.log(`  Status Code: ${response.status}`);
-                console.log(`  Type: ${getFileTypeLabel(project.link)}`);
-            })
-            .catch(error => {
-                console.log(`File ${index + 1}: ${project.title}`);
-                console.log(`  Path: ${project.link}`);
-                console.log(`  Error: ❌ ${error.message}`);
-            });
+    // Project card click (for main download only)
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Only trigger if not clicking a download button
+            if (!e.target.closest('.download-btn')) {
+                const index = this.getAttribute('data-project-index');
+                const project = config.projects[index];
+                const isExternal = project.isExternal || isExternalLink(project.link);
+                downloadFile(project.link, project.title, 'main', isExternal);
+            }
+        });
     });
 }
 
@@ -534,7 +603,7 @@ function initBackToTop() {
     });
 }
 
-// Add CSS for notification animations
+// Add CSS styles for notifications and buttons
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -557,6 +626,119 @@ style.textContent = `
             transform: translateX(100%);
             opacity: 0;
         }
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    .download-section {
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .download-btn {
+        width: 100%;
+        border: none;
+        padding: 12px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        text-align: center;
+        position: relative;
+    }
+    
+    .download-btn.loading {
+        animation: pulse 1s infinite;
+        cursor: wait;
+    }
+    
+    .main-download {
+        background: linear-gradient(135deg, var(--primary-color), #10b981);
+        color: white;
+    }
+    
+    .main-download.external-link {
+        background: linear-gradient(135deg, #4285f4, #34a853);
+    }
+    
+    .secondary-download {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        font-size: 0.9em;
+        padding: 10px 12px;
+    }
+    
+    .secondary-download.external-link {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+    
+    .download-btn:hover:not(.loading) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .main-download:hover:not(.loading) {
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    .main-download.external-link:hover:not(.loading) {
+        box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+    }
+    
+    .secondary-download:hover:not(.loading) {
+        box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
+    }
+    
+    .secondary-download.external-link:hover:not(.loading) {
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+    }
+    
+    .download-btn small {
+        font-size: 0.8em;
+        opacity: 0.9;
+        margin-top: 3px;
+        font-weight: normal;
+    }
+    
+    .additional-downloads {
+        margin-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 15px;
+    }
+    
+    .google-drive-note {
+        font-size: 0.85em;
+        color: #4285f4;
+        margin-top: 8px;
+        padding: 6px 10px;
+        background: rgba(66, 133, 244, 0.1);
+        border-radius: 6px;
+        border-left: 3px solid #4285f4;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .google-drive-note small {
+        font-size: 0.9em;
+    }
+    
+    /* External link indicator */
+    .external-link::after {
+        content: " ↗";
+        font-size: 0.9em;
+        position: absolute;
+        right: 15px;
+        opacity: 0.8;
     }
 `;
 document.head.appendChild(style);

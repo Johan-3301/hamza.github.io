@@ -127,9 +127,8 @@ const config = {
             {
                 type: "zip",
                 label: "Download Source Code (ZIP)",
-                link: "documents/Unitrack_Project.zip.001",
-                icon: "📦",
-                note: "Split ZIP file - download both parts"
+                link: "documents/Unitrack_Project.pdf",
+               
             }
         ],
         isPDF: true,
@@ -178,5 +177,6 @@ const config = {
 
 // Make config available globally
 window.config = config;
+
 
 

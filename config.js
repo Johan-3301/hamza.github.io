@@ -111,30 +111,26 @@ const config = {
     ],
     
     // Projects - Updated with correct file names
-  projects: [
-    {
-        title: "Unitrack - Student Attendance System",
-        description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
-        icon: "📊",
-        // Provide multiple download options
-        downloads: [
-            {
-                type: "pdf",
-                label: "Download PDF",
-                link: "documents/Unitrack_Project.pdf",
-                icon: "📄"
-            },
-            {
-                type: "zip",
-                label: "Download Source Code (ZIP)",
-                link: "documents/Unitrack_Project.pdf",
-               
-            }
-        ],
-        isPDF: true,
-        tags: ["Python", "OpenCV", "Flask", "MySQL"]
-    }
-],
+    projects: [
+        {
+            title: "Unitrack - Student Attendance System",
+            description: "A comprehensive student attendance tracking system with facial recognition, QR code scanning, and real-time reporting features.",
+            icon: "📊",
+            link: "documents/Unitrack_Project.zip.001",
+            isPDF: false,
+            tags: ["Python", "OpenCV", "Flask", "MySQL"],
+            note: "This is a split ZIP file. Download both parts to extract."
+        },
+        {
+            title: "Blockchain Technology",
+            description: "Développement d'un smart contract de vote décentralisé en Solidity, garantissant un vote unique par participant et la transparence des résultats.",
+            icon: "⛓️",
+            link: "documents/Blockchain_Project.pdf",
+            isPDF: true,
+            tags: ["Blockchain", "Solidity", "Remix IDE", "Python"]
+        }
+    ],
+    
     // Experience Timeline
     experience: [
         {
@@ -177,6 +173,3 @@ const config = {
 
 // Make config available globally
 window.config = config;
-
-
-

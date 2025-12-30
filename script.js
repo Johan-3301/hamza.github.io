@@ -1,3 +1,23 @@
+// Helper function to extract file extension
+function getFileExtension(filename) {
+    return filename.split('.').pop().toLowerCase();
+}
+
+// Helper function to get file type label
+function getFileTypeLabel(filename) {
+    const ext = getFileExtension(filename);
+    const fileTypes = {
+        'pdf': 'PDF Document',
+        'zip': 'ZIP Archive',
+        'zip.001': 'Split ZIP Part 1',
+        'zip.002': 'Split ZIP Part 2',
+        'doc': 'Word Document',
+        'docx': 'Word Document',
+        'txt': 'Text File'
+    };
+    return fileTypes[ext] || ext.toUpperCase() + ' File';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initPortfolio();
     initCursor();
@@ -10,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initBackToTop();
     initContactLinks();
     initCurrentYear();
+    checkPDFFiles(); // Debug function to check file availability
 });
 
 function initPortfolio() {
@@ -53,7 +74,7 @@ function initPortfolio() {
         </div>
     `).join('');
     
-    // Populate projects with PDF download support
+    // Populate projects with correct download support
     const projectsGrid = document.getElementById('projectsGrid');
     projectsGrid.innerHTML = config.projects.map((project, index) => `
         <div class="project-card" data-project-index="${index}">
@@ -64,28 +85,63 @@ function initPortfolio() {
                 <div class="tech-stack">
                     ${project.tags.map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
                 </div>
-                ${project.isPDF ? '<div class="download-badge">📄 Download PDF</div>' : ''}
+                <div class="download-section">
+                    <div class="download-badge">
+                        ${project.isPDF ? '📄 PDF' : '📦 Download'} 
+                        <small style="font-size: 0.8em; margin-left: 5px;">
+                            ${getFileTypeLabel(project.link)}
+                        </small>
+                    </div>
+                    ${project.note ? `<small style="display: block; margin-top: 5px; color: #ff6b6b; font-size: 0.8em;">${project.note}</small>` : ''}
+                </div>
             </div>
         </div>
     `).join('');
     
-    // Add click handlers for project cards
+    // Add click handlers for project cards with improved download
     document.querySelectorAll('.project-card').forEach(card => {
         card.addEventListener('click', function() {
             const index = this.getAttribute('data-project-index');
             const project = config.projects[index];
-            if (project.isPDF) {
-                // Download PDF
-                const link = document.createElement('a');
-                link.href = project.link;
-                link.download = project.link.split('/').pop();
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // Open link in new tab
-                window.open(project.link, '_blank');
-            }
+            
+            console.log('Download clicked:', {
+                title: project.title,
+                link: project.link,
+                isPDF: project.isPDF,
+                fileType: getFileTypeLabel(project.link)
+            });
+            
+            // Check if file exists before attempting download
+            fetch(project.link, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        // File exists - proceed with download
+                        const link = document.createElement('a');
+                        link.href = project.link;
+                        
+                        // Set appropriate download filename
+                        if (project.isPDF) {
+                            link.download = project.title.replace(/\s+/g, '_') + '.pdf';
+                        } else {
+                            link.download = project.link.split('/').pop();
+                        }
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Show download confirmation
+                        showDownloadNotification(project.title, getFileTypeLabel(project.link));
+                    } else {
+                        // File not found
+                        console.error('File not found:', project.link);
+                        showErrorNotification(`File not found: ${project.link.split('/').pop()}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error accessing file:', error);
+                    showErrorNotification('Error accessing file. Please try again.');
+                });
         });
     });
     
@@ -99,6 +155,94 @@ function initPortfolio() {
             </div>
         </div>
     `).join('');
+}
+
+function showDownloadNotification(title, fileType) {
+    const notification = document.createElement('div');
+    notification.className = 'download-notification';
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px;">✅</span>
+            <div>
+                <strong>Download started</strong>
+                <div style="font-size: 0.9em;">${title} (${fileType})</div>
+            </div>
+        </div>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(16, 185, 129, 0.95);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function showErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px;">⚠️</span>
+            <div>
+                <strong>Download Error</strong>
+                <div style="font-size: 0.9em;">${message}</div>
+            </div>
+        </div>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
+// Debug function to check file availability
+function checkPDFFiles() {
+    console.log('Checking file availability:');
+    config.projects.forEach((project, index) => {
+        fetch(project.link, { method: 'HEAD' })
+            .then(response => {
+                console.log(`File ${index + 1}: ${project.title}`);
+                console.log(`  Path: ${project.link}`);
+                console.log(`  Status: ${response.ok ? '✅ Found' : '❌ Not Found'}`);
+                console.log(`  Status Code: ${response.status}`);
+                console.log(`  Type: ${getFileTypeLabel(project.link)}`);
+            })
+            .catch(error => {
+                console.log(`File ${index + 1}: ${project.title}`);
+                console.log(`  Path: ${project.link}`);
+                console.log(`  Error: ❌ ${error.message}`);
+            });
+    });
 }
 
 function initContactLinks() {
@@ -389,3 +533,30 @@ function initBackToTop() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
+
+// Add CSS for notification animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);

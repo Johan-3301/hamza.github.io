@@ -22,6 +22,7 @@ function getFileTypeLabel(filename) {
 
 // Check if link is external
 function isExternalLink(url) {
+    if (!url) return false;
     return url.startsWith('http://') || 
            url.startsWith('https://') || 
            url.includes('google.com') || 
@@ -39,9 +40,11 @@ function showDownloadNotification(title, fileType, isExternal = false) {
         <div style="display: flex; align-items: center;">
             <span style="margin-right: 10px; font-size: 1.2em;">${icon}</span>
             <div>
-                <strong>${isExternal ? 'Opening external link' : 'Download started'}</strong>
-                <div style="font-size: 0.9em;">${title} (${fileType})</div>
-                ${isExternal ? '<div style="font-size: 0.8em; margin-top: 3px; opacity: 0.9;">Will open in new tab</div>' : ''}
+                <strong>${isExternal ? 'Opening Google Drive' : 'Download started'}</strong>
+                <div style="font-size: 0.9em;">${title}</div>
+                <div style="font-size: 0.8em; margin-top: 3px; opacity: 0.9;">
+                    ${isExternal ? 'Will open in new tab' : fileType}
+                </div>
             </div>
         </div>
     `;
@@ -54,7 +57,7 @@ function showDownloadNotification(title, fileType, isExternal = false) {
         padding: 15px 20px;
         border-radius: 8px;
         z-index: 9999;
-        max-width: 300px;
+        max-width: 320px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         animation: slideIn 0.3s ease-out;
     `;
@@ -109,7 +112,7 @@ function downloadFile(filePath, fileName, fileType, isExternal = false) {
     if (isExternal) {
         // For external links, open in new tab
         window.open(filePath, '_blank', 'noopener,noreferrer');
-        showDownloadNotification(fileName, getFileTypeLabel(filePath), true);
+        showDownloadNotification(fileName, fileType, true);
         return;
     }
     
@@ -123,7 +126,7 @@ function downloadFile(filePath, fileName, fileType, isExternal = false) {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                showDownloadNotification(fileName || 'File', getFileTypeLabel(filePath), false);
+                showDownloadNotification(fileName || 'File', fileType, false);
             } else {
                 console.error('File not found:', filePath);
                 showErrorNotification(`File not found: ${filePath.split('/').pop()}`);
@@ -133,6 +136,22 @@ function downloadFile(filePath, fileName, fileType, isExternal = false) {
             console.error('Error accessing file:', error);
             showErrorNotification('Error accessing file. Please try again.');
         });
+}
+
+// Handle Google Drive download with user feedback
+function handleGoogleDriveDownload(button, fileName) {
+    // Visual feedback
+    const originalHTML = button.innerHTML;
+    button.classList.add('loading');
+    button.innerHTML = '⏳ Opening Google Drive...';
+    button.disabled = true;
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+        button.classList.remove('loading');
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+    }, 2000);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -215,7 +234,8 @@ function initPortfolio() {
                     
                     ${project.isExternal ? 
                         `<div class="google-drive-note">
-                            <small>📢 Large file hosted on Google Drive</small>
+                            <span style="margin-right: 5px;">📢</span>
+                            <small>Large file hosted on Google Drive. Click to view/download.</small>
                         </div>` 
                         : ''
                     }
@@ -268,21 +288,12 @@ function initDownloadButtons() {
             const isExternal = this.getAttribute('data-is-external') === 'true';
             const project = config.projects[index];
             
-            // Visual feedback for external links
-            if (isExternal) {
-                this.classList.add('loading');
-                this.innerHTML = '⏳ Opening Google Drive...';
-                setTimeout(() => {
-                    this.classList.remove('loading');
-                    this.innerHTML = `
-                        ${project.isPDF ? '📄 ' : '📦 '}
-                        ${project.isExternal ? 'Open PDF (Google Drive)' : 'Download PDF'}
-                        <small>${getFileTypeLabel(project.link)} ↗</small>
-                    `;
-                }, 1500);
+            // Visual feedback for Google Drive links
+            if (isExternal && project.link.includes('drive.google.com')) {
+                handleGoogleDriveDownload(this, project.title);
             }
             
-            downloadFile(project.link, project.title, 'main', isExternal);
+            downloadFile(project.link, project.title, 'PDF Document', isExternal);
         });
     });
     
@@ -296,7 +307,12 @@ function initDownloadButtons() {
             const project = config.projects[projectIndex];
             const download = project.additionalDownloads[downloadIndex];
             
-            downloadFile(download.link, download.name, 'additional', isExternal);
+            // Visual feedback for Google Drive links
+            if (isExternal && download.link.includes('drive.google.com')) {
+                handleGoogleDriveDownload(this, download.name);
+            }
+            
+            downloadFile(download.link, download.name, download.description || getFileTypeLabel(download.link), isExternal);
         });
     });
     
@@ -308,7 +324,14 @@ function initDownloadButtons() {
                 const index = this.getAttribute('data-project-index');
                 const project = config.projects[index];
                 const isExternal = project.isExternal || isExternalLink(project.link);
-                downloadFile(project.link, project.title, 'main', isExternal);
+                
+                // Visual feedback for Google Drive links
+                if (isExternal && project.link.includes('drive.google.com')) {
+                    const button = this.querySelector('.main-download');
+                    if (button) handleGoogleDriveDownload(button, project.title);
+                }
+                
+                downloadFile(project.link, project.title, 'PDF Document', isExternal);
             }
         });
     });
@@ -659,6 +682,12 @@ style.textContent = `
     .download-btn.loading {
         animation: pulse 1s infinite;
         cursor: wait;
+        opacity: 0.8;
+    }
+    
+    .download-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .main-download {
@@ -681,24 +710,24 @@ style.textContent = `
         background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     }
     
-    .download-btn:hover:not(.loading) {
+    .download-btn:hover:not(.loading):not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
     
-    .main-download:hover:not(.loading) {
+    .main-download:hover:not(.loading):not(:disabled) {
         box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
     }
     
-    .main-download.external-link:hover:not(.loading) {
+    .main-download.external-link:hover:not(.loading):not(:disabled) {
         box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
     }
     
-    .secondary-download:hover:not(.loading) {
+    .secondary-download:hover:not(.loading):not(:disabled) {
         box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
     }
     
-    .secondary-download.external-link:hover:not(.loading) {
+    .secondary-download.external-link:hover:not(.loading):not(:disabled) {
         box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
     }
     
@@ -719,7 +748,7 @@ style.textContent = `
         font-size: 0.85em;
         color: #4285f4;
         margin-top: 8px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         background: rgba(66, 133, 244, 0.1);
         border-radius: 6px;
         border-left: 3px solid #4285f4;
@@ -730,6 +759,7 @@ style.textContent = `
     
     .google-drive-note small {
         font-size: 0.9em;
+        line-height: 1.4;
     }
     
     /* External link indicator */
@@ -739,6 +769,19 @@ style.textContent = `
         position: absolute;
         right: 15px;
         opacity: 0.8;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .download-btn {
+            padding: 10px 12px;
+            font-size: 0.9em;
+        }
+        
+        .google-drive-note {
+            font-size: 0.8em;
+            padding: 6px 10px;
+        }
     }
 `;
 document.head.appendChild(style);
